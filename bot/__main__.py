@@ -5,8 +5,10 @@ from discord.ext import commands
 
 from bot.config import get_guild_id, get_token, logger
 
-# Enable the default intents. Slash commands do NOT require the privileged message_content intent
+# Member-join onboarding requires the privileged Server Members Intent to be enabled
+# in both code and the Discord Developer Portal.
 intents = discord.Intents.default()
+intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -15,6 +17,8 @@ async def load_cogs() -> None:
     """Load all cogs from the bot.cogs package."""
     await bot.load_extension("bot.cogs.ping")
     logger.info("Loaded cog: bot.cogs.ping")
+    await bot.load_extension("bot.cogs.initiate")
+    logger.info("Loaded cog: bot.cogs.initiate")
 
 
 async def sync_commands() -> None:
@@ -34,8 +38,6 @@ async def sync_commands() -> None:
 async def on_ready() -> None:
     """Log a successful connection and sync commands once."""
     logger.info("Logged in as %s (id=%s)", bot.user, bot.user.id)
-    # Sync only if a guild is configured, or if this is the first global sync.
-    # Calling sync on every startup can hit rate limits.
     if get_guild_id() is not None:
         await sync_commands()
 
